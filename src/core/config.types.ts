@@ -50,6 +50,7 @@ export interface EvalTaskConfig {
     grader_model?: string;
     docker?: DockerConfig;
     environment?: Partial<EnvironmentConfig>;
+    user?: string;      // run commands as this user (non-root) - only for local provider
 }
 
 /** Top-level defaults */
@@ -62,6 +63,7 @@ export interface EvalDefaults {
     grader_model?: string;  // default LLM grader model
     docker: DockerConfig;
     environment: EnvironmentConfig;
+    user?: string;      // run commands as this user (non-root) - only for local provider
 }
 
 /** Top-level eval.yaml */
@@ -86,6 +88,7 @@ export interface ResolvedTask {
     grader_model?: string;  // inherited default model for LLM graders
     docker: DockerConfig;
     environment: EnvironmentConfig;
+    user?: string;          // run commands as this user (non-root) - only for local provider
 }
 
 export interface ResolvedGrader {

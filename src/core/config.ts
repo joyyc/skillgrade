@@ -116,6 +116,7 @@ function validateConfig(raw: any): EvalConfig {
             trials: t.trials,
             timeout: t.timeout,
             docker: t.docker,
+            user: t.user,
         };
     });
 
@@ -144,6 +145,7 @@ export async function resolveTask(
         ...(task.environment || {}),
     };
     const grader_model = task.grader_model || defaults.grader_model;
+    const user = task.user || defaults.user;
 
     // Resolve instruction — could be inline text or file path
     const instruction = await resolveFileOrInline(task.instruction, baseDir);
@@ -185,6 +187,7 @@ export async function resolveTask(
         grader_model,
         docker,
         environment,
+        user,
     };
 }
 

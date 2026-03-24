@@ -101,6 +101,7 @@ async function main() {
         agent: getFlag('agent'),
         provider: getFlag('provider'),
         grader: getFlag('grader'),
+        user: getFlag('user'),
         output: outputDir,
     });
 
@@ -131,6 +132,7 @@ function printHelp() {
     --parallel=N       Run trials concurrently
     --agent=gemini|claude|codex   Override agent (default: auto-detect from API key)
     --provider=docker|local Override provider (default: docker)
+    --user=USERNAME    Run commands as this user (non-root, local provider only)
     --output=DIR       Output directory for reports and temp files
                        Default: $TMPDIR/skillgrade
     --validate         Verify graders using reference solutions
@@ -146,8 +148,9 @@ function printHelp() {
     skillgrade --eval=fix-linting  # run a specific eval
     skillgrade --eval=foo,bar      # run multiple evals
     skillgrade --regression --ci   # CI regression with 30 trials
+    skillgrade --provider=local --user=myuser  # run locally as myuser
     skillgrade preview browser     # open web UI
-`);
+`)
 }
 
 main().catch(err => {

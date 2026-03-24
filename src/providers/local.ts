@@ -4,6 +4,11 @@ import { spawn } from 'child_process';
 import { EnvironmentProvider, EnvironmentSetupOpts, CommandResult } from '../types';
 
 export class LocalProvider implements EnvironmentProvider {
+    private user?: string;
+
+    constructor(user?: string) {
+        this.user = user;
+    }
     async setup(taskPath: string, skillsPaths: string[], _opts: EnvironmentSetupOpts, env?: Record<string, string>): Promise<string> {
         const tempDir = path.join('/tmp', `skillgrade-${Math.random().toString(36).substring(7)}`);
         await fs.ensureDir(tempDir);
@@ -35,7 +40,12 @@ export class LocalProvider implements EnvironmentProvider {
 
     async runCommand(workspacePath: string, command: string, env?: Record<string, string>): Promise<CommandResult> {
         return new Promise((resolve) => {
-            const child = spawn(command, {
+            // If user is specified, wrap command with sudo -u
+            const finalCommand = this.user
+                ? `sudo -u ${this.user} ${command}`
+                : command;
+
+            const child = spawn(finalCommand, {
                 shell: true,
                 cwd: workspacePath,
                 env: { ...process.env, ...env }
