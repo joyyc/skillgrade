@@ -158,7 +158,8 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
         if (apiKey) {
             return this.callGemini(prompt, apiKey, config);
         } else if (anthropicKey) {
-            return this.callAnthropic(prompt, anthropicKey, config);
+            const baseUrl = env?.ANTHROPIC_BASE_URL || process.env.ANTHROPIC_BASE_URL;
+            return this.callAnthropic(prompt, anthropicKey, config, baseUrl);
         }
 
         return {
@@ -191,10 +192,11 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
         }
     }
 
-    private async callAnthropic(prompt: string, apiKey: string, config: GraderConfig): Promise<GraderResult> {
+    private async callAnthropic(prompt: string, apiKey: string, config: GraderConfig, baseUrl?: string): Promise<GraderResult> {
         const model = config.model || 'claude-sonnet-4-20250514';
+        const apiUrl = baseUrl ? `${baseUrl}/v1/messages` : 'https://api.anthropic.com/v1/messages';
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
