@@ -9,9 +9,11 @@ export class DockerProvider implements EnvironmentProvider {
     private preparedImage?: string;
     private setupOpts?: EnvironmentSetupOpts;
     private envPairs: string[] = [];
+    private user?: string;
 
-    constructor() {
+    constructor(user?: string) {
         this.docker = new Docker();
+        this.user = user;
     }
 
     /**
@@ -96,7 +98,7 @@ export class DockerProvider implements EnvironmentProvider {
         const envPairs = this.envPairs.length > 0 ? this.envPairs
             : (env ? Object.entries(env).map(([k, v]) => `${k}=${v}`) : []);
 
-        const container = await this.docker.createContainer({
+        const containerOpts: any = {
             Image: this.preparedImage!,
             Cmd: ['tail', '-f', '/dev/null'],
             Env: envPairs,
@@ -105,7 +107,14 @@ export class DockerProvider implements EnvironmentProvider {
                 NanoCpus: config.environment.cpus * 1e9,
                 Memory: config.environment.memory_mb * 1024 * 1024,
             }
-        });
+        };
+
+        // Set user if specified
+        if (this.user) {
+            containerOpts.User = this.user;
+        }
+
+        const container = await this.docker.createContainer(containerOpts);
 
         await container.start();
         return container.id;
@@ -178,13 +187,20 @@ export class DockerProvider implements EnvironmentProvider {
         const container = this.docker.getContainer(containerId);
         const envPairs = env ? Object.entries(env).map(([k, v]) => `${k}=${v}`) : [];
 
-        const exec = await container.exec({
+        const execOpts: any = {
             Cmd: ['/bin/bash', '-c', command],
             AttachStdout: true,
             AttachStderr: true,
             Tty: false,
             Env: envPairs
-        });
+        };
+
+        // Set user if specified
+        if (this.user) {
+            execOpts.User = this.user;
+        }
+
+        const exec = await container.exec(execOpts);
 
         const stream = await exec.start({});
 

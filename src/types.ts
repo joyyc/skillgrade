@@ -67,7 +67,7 @@ export interface EnvironmentSetupOpts {
         cpus: number;
         memory_mb: number;
     };
-    user?: string;  // run commands as this user (non-root)
+    user?: string;  // run commands as this user (e.g. "1000" or "myuser")
 }
 
 export interface EnvironmentProvider {

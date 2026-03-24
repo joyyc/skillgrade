@@ -132,7 +132,7 @@ function printHelp() {
     --parallel=N       Run trials concurrently
     --agent=gemini|claude|codex   Override agent (default: auto-detect from API key)
     --provider=docker|local Override provider (default: docker)
-    --user=USERNAME    Run commands as this user (non-root, local provider only)
+    --user=USERNAME    Run commands as this user (e.g. "1000" or "myuser")
     --output=DIR       Output directory for reports and temp files
                        Default: $TMPDIR/skillgrade
     --validate         Verify graders using reference solutions

@@ -27,7 +27,7 @@ interface RunOptions {
     preset?: 'smoke' | 'reliable' | 'regression';
     agent?: string;      // override agent (gemini|claude)
     provider?: string;   // override provider (docker|local)
-    user?: string;       // run commands as this user (non-root, local provider only)
+    user?: string;       // run commands as this user (e.g. "1000" or "myuser")
     output?: string;     // output directory for reports and temp files
     grader?: string;     // filter graders by type (deterministic|llm_rubric)
 }
@@ -142,7 +142,7 @@ export async function runEvals(dir: string, opts: RunOptions) {
         // Pick provider
         const runUser = opts.user || resolved.user;
         const provider = providerName === 'docker'
-            ? new DockerProvider()
+            ? new DockerProvider(runUser)
             : new LocalProvider(runUser);
 
         const runner = new EvalRunner(provider, resultsDir);
