@@ -195,6 +195,8 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
     private async callAnthropic(prompt: string, apiKey: string, config: GraderConfig, baseUrl?: string): Promise<GraderResult> {
         const model = config.model || 'claude-sonnet-4-20250514';
         const apiUrl = baseUrl ? `${baseUrl}/v1/messages` : 'https://api.anthropic.com/v1/messages';
+        const debugPrefix = `[LLMGrader/Anthropic model=${model}]`;
+
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -210,13 +212,49 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
                 })
             });
 
-            const data = await response.json() as any;
+            // Get raw text first for better error messages
+            const rawText = await response.text();
+
+            if (!response.ok) {
+                return {
+                    grader_type: 'llm_rubric',
+                    score: 0,
+                    weight: config.weight,
+                    details: `${debugPrefix} API error (${response.status} ${response.statusText}): ${rawText.substring(0, 500)}`
+                };
+            }
+
+            // Parse JSON from text
+            let data: any;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                return {
+                    grader_type: 'llm_rubric',
+                    score: 0,
+                    weight: config.weight,
+                    details: `${debugPrefix} Failed to parse JSON response: ${rawText.substring(0, 500)}`
+                };
+            }
+
             // Find text block in content array (may have thinking blocks first)
             const textBlock = data?.content?.find((block: any) => block?.type === 'text');
             const text = textBlock?.text || data?.content?.[0]?.text || '';
+
+            if (!text) {
+                // Log content structure for debugging
+                const contentTypes = data?.content?.map((b: any) => b?.type).join(', ') || 'none';
+                return {
+                    grader_type: 'llm_rubric',
+                    score: 0,
+                    weight: config.weight,
+                    details: `${debugPrefix} No text content in response. Content types: [${contentTypes}]`
+                };
+            }
+
             return this.parseResponse(text, config);
         } catch (e) {
-            return { grader_type: 'llm_rubric', score: 0, weight: config.weight, details: `Anthropic API error: ${e}` };
+            return { grader_type: 'llm_rubric', score: 0, weight: config.weight, details: `${debugPrefix} Request failed: ${e}` };
         }
     }
 
