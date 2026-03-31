@@ -211,7 +211,9 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
             });
 
             const data = await response.json() as any;
-            const text = data?.content?.[0]?.text || '';
+            // Find text block in content array (may have thinking blocks first)
+            const textBlock = data?.content?.find((block: any) => block?.type === 'text');
+            const text = textBlock?.text || data?.content?.[0]?.text || '';
             return this.parseResponse(text, config);
         } catch (e) {
             return { grader_type: 'llm_rubric', score: 0, weight: config.weight, details: `Anthropic API error: ${e}` };
