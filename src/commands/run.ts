@@ -50,8 +50,12 @@ export async function runEvals(dir: string, opts: RunOptions) {
     const rootEnv = await loadEnvFile(path.join(dir, '.env'));
     const env: Record<string, string> = { ...rootEnv };
     if (process.env.GEMINI_API_KEY) env.GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (process.env.ANTHROPIC_API_KEY) env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    // 支持 ANTHROPIC_AUTH_TOKEN 作为 ANTHROPIC_API_KEY 的别名
+    const anthropicKey = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
+    if (anthropicKey) env.ANTHROPIC_API_KEY = anthropicKey;
     if (process.env.ANTHROPIC_BASE_URL) env.ANTHROPIC_BASE_URL = process.env.ANTHROPIC_BASE_URL;
+    // 支持 ANTHROPIC_MODEL 环境变量作为默认 grader model
+    if (process.env.ANTHROPIC_MODEL) env.ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL;
     if (process.env.OPENAI_API_KEY) env.OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
     if (Object.keys(rootEnv).length > 0) {

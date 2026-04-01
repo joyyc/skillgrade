@@ -153,7 +153,8 @@ Respond with ONLY a JSON object: {"score": <number>, "reasoning": "<brief explan
 
         // Try Gemini API first, fall back to Anthropic
         const apiKey = env?.GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-        const anthropicKey = env?.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+        // 支持 ANTHROPIC_AUTH_TOKEN 作为 ANTHROPIC_API_KEY 的别名
+        const anthropicKey = env?.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
 
         if (apiKey) {
             return this.callGemini(prompt, apiKey, config);

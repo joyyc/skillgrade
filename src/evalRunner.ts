@@ -238,7 +238,7 @@ export class EvalRunner {
                     rubric: graderDef.type === 'llm_rubric'
                         ? `prompts/${llmIndex === 0 ? 'quality.md' : `quality_${llmIndex}.md`}`
                         : undefined,
-                    model: graderDef.model || opts.graderModel,
+                    model: graderDef.model || opts.graderModel || process.env.ANTHROPIC_MODEL,
                     weight: graderDef.weight,
                 };
 
