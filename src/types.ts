@@ -22,6 +22,7 @@ export interface GraderResult {
 export interface LogEntry {
     type: 'agent_start' | 'command' | 'agent_result' | 'grader' | 'reward';
     timestamp: string;
+    duration_ms?: number;  // 执行耗时（毫秒）
     instruction?: string;
     command?: string;
     stdout?: string;
@@ -68,6 +69,8 @@ export interface EnvironmentSetupOpts {
         memory_mb: number;
     };
     user?: string;  // run commands as this user (e.g. "1000" or "myuser")
+    noCleanup?: boolean;  // if true, keep temp directories after trial
+    trialId?: number;     // trial number for naming temp directories
 }
 
 export interface EnvironmentProvider {

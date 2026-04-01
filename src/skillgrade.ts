@@ -103,6 +103,7 @@ async function main() {
         grader: getFlag('grader'),
         user: getFlag('user'),
         output: outputDir,
+        noCleanup: hasFlag('no-cleanup'),
     });
 
     if (openPreview) {
@@ -135,6 +136,8 @@ function printHelp() {
     --user=USERNAME    Run commands as this user (e.g. "1000" or "myuser")
     --output=DIR       Output directory for reports and temp files
                        Default: $TMPDIR/skillgrade
+    --no-cleanup       Keep temp directories after trial execution
+                       Temp dirs are named with trial numbers (e.g. trial_1, trial_2)
     --validate         Verify graders using reference solutions
     --ci               CI mode: exit non-zero if below threshold
     --threshold=0.8    Pass rate threshold for CI mode

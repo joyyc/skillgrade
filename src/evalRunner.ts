@@ -58,6 +58,7 @@ export interface EvalRunOptions {
         cpus: number;
         memory_mb: number;
     };
+    noCleanup?: boolean;        // keep temp directories after trial
 }
 
 export class EvalRunner {
@@ -171,7 +172,8 @@ export class EvalRunner {
         const startTime = Date.now();
 
         const spinner = new Spinner(`${index + 1}/${total}`, 'setting up environment');
-        const workspace = await this.provider.setup(taskPath, skillsPaths, opts, env);
+        const setupOpts = { ...opts, trialId: index + 1 };
+        const workspace = await this.provider.setup(taskPath, skillsPaths, setupOpts, env);
 
         try {
             const instruction = opts.instruction;
@@ -184,11 +186,14 @@ export class EvalRunner {
 
             spinner.update('running agent');
             const loggedRunCommand = async (cmd: string) => {
+                const cmdStartTime = Date.now();
                 const result = await this.provider.runCommand(workspace, cmd, env);
+                const cmdDuration = Date.now() - cmdStartTime;
                 commandCount++;
                 sessionLog.push({
                     type: 'command',
                     timestamp: this.timestamp(),
+                    duration_ms: cmdDuration,
                     command: cmd,
                     stdout: result.stdout,
                     stderr: result.stderr,
@@ -198,15 +203,18 @@ export class EvalRunner {
             };
 
             const agentTimeoutMs = opts.timeoutSec * 1000;
+            const agentStartTime = Date.now();
             const agentLogs = await withTimeout(
                 agent.run(instruction, workspace, loggedRunCommand),
                 agentTimeoutMs,
                 `Agent (limit: ${opts.timeoutSec}s)`
             );
+            const agentDuration = Date.now() - agentStartTime;
 
             sessionLog.push({
                 type: 'agent_result',
                 timestamp: this.timestamp(),
+                duration_ms: agentDuration,
                 output: agentLogs
             });
 
@@ -235,16 +243,19 @@ export class EvalRunner {
                 };
 
                 const graderTimeoutMs = (opts.graderTimeoutSec ?? 120) * 1000;
+                const graderStartTime = Date.now();
                 const result = await withTimeout(
                     grader.grade(workspace, this.provider, graderConfig, taskPath, sessionLog, env),
                     graderTimeoutMs,
                     `Grader ${graderDef.type} (limit: ${opts.graderTimeoutSec ?? 120}s)`
                 );
+                const graderDuration = Date.now() - graderStartTime;
                 graderResults.push(result);
 
                 sessionLog.push({
                     type: 'grader',
                     timestamp: this.timestamp(),
+                    duration_ms: graderDuration,
                     grader_result: result
                 });
             }

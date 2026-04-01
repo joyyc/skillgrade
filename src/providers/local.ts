@@ -5,12 +5,28 @@ import { EnvironmentProvider, EnvironmentSetupOpts, CommandResult } from '../typ
 
 export class LocalProvider implements EnvironmentProvider {
     private user?: string;
+    private noCleanup: boolean = false;
 
     constructor(user?: string) {
         this.user = user;
     }
+
+    setNoCleanup(value: boolean): void {
+        this.noCleanup = value;
+    }
+
     async setup(taskPath: string, skillsPaths: string[], _opts: EnvironmentSetupOpts, env?: Record<string, string>): Promise<string> {
-        const tempDir = path.join('/tmp', `skillgrade-${Math.random().toString(36).substring(7)}`);
+        const taskName = path.basename(taskPath);
+        const trialSuffix = _opts.trialId ? `_trial_${_opts.trialId}` : '';
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const dirName = `skillgrade-${taskName}${trialSuffix}-${randomSuffix}`;
+        const tempDir = path.join('/tmp', dirName);
+
+        // Store noCleanup option from setup opts
+        if (_opts.noCleanup !== undefined) {
+            this.noCleanup = _opts.noCleanup;
+        }
+
         await fs.ensureDir(tempDir);
         await fs.copy(taskPath, tempDir);
 
@@ -33,6 +49,9 @@ export class LocalProvider implements EnvironmentProvider {
     }
 
     async cleanup(workspacePath: string): Promise<void> {
+        if (this.noCleanup) {
+            return; // Skip cleanup when --no-cleanup is set
+        }
         if (await fs.pathExists(workspacePath)) {
             await fs.remove(workspacePath);
         }

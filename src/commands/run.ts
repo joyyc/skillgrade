@@ -30,6 +30,7 @@ interface RunOptions {
     user?: string;       // run commands as this user (e.g. "1000" or "myuser")
     output?: string;     // output directory for reports and temp files
     grader?: string;     // filter graders by type (deterministic|llm_rubric)
+    noCleanup?: boolean; // keep temp directories after trial execution
 }
 
 async function loadEnvFile(filePath: string): Promise<Record<string, string>> {
@@ -122,6 +123,7 @@ export async function runEvals(dir: string, opts: RunOptions) {
             timeoutSec: resolved.timeout,
             graderModel: resolved.grader_model,
             environment: resolved.environment,
+            noCleanup: opts.noCleanup,
         };
 
         // Pick agent: CLI flag > task-level override > auto-detect from API key > default
@@ -204,8 +206,10 @@ export async function runEvals(dir: string, opts: RunOptions) {
             }
         }
 
-        // Cleanup temp dir
-        try { await fs.remove(tmpTaskDir); } catch { /* ignore cleanup errors */ }
+        // Cleanup temp dir (unless --no-cleanup)
+        if (!opts.noCleanup) {
+            try { await fs.remove(tmpTaskDir); } catch { /* ignore cleanup errors */ }
+        }
     }
 
     // CI mode: exit with appropriate code
